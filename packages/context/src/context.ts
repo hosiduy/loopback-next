@@ -45,18 +45,21 @@ export class Context {
    * Create a binding with the given key in the context. If a locked binding
    * already exists with the same key, an error will be thrown.
    *
-   * @param keyOrBinding Binding key or a binding
+   * @param key Binding key
    */
-  bind(keyOrBinding: string | Binding): Binding {
-    let key: string;
-    let binding: Binding;
-    if (typeof keyOrBinding === 'string') {
-      key = keyOrBinding;
-      binding = new Binding(key);
-    } else {
-      key = keyOrBinding.key;
-      binding = keyOrBinding;
-    }
+  bind(key: string): Binding {
+    const binding = new Binding(key);
+    this.add(binding);
+    return binding;
+  }
+
+  /**
+   * Add a binding to the context. If a locked binding already exists with the
+   * same key, an error will be thrown.
+   * @param binding The configured binding to be added
+   */
+  add(binding: Binding): this {
+    const key = binding.key;
     /* istanbul ignore if */
     if (debug.enabled) {
       debug('Adding binding: %s', key);
@@ -68,9 +71,8 @@ export class Context {
       if (bindingIsLocked)
         throw new Error(`Cannot rebind key "${key}" to a locked binding`);
     }
-
     this.registry.set(key, binding);
-    return binding;
+    return this;
   }
 
   /**

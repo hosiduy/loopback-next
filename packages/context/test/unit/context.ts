@@ -64,13 +64,6 @@ describe('Context', () => {
       expect(result).to.be.true();
     });
 
-    it('accepts a binding', () => {
-      const binding = new Binding('foo').to('bar');
-      expect(ctx.bind(binding)).to.be.exactly(binding);
-      const result = ctx.contains('foo');
-      expect(result).to.be.true();
-    });
-
     it('returns a binding', () => {
       const binding = ctx.bind('foo');
       expect(binding).to.be.instanceOf(Binding);
@@ -79,6 +72,30 @@ describe('Context', () => {
     it('rejects a key containing property separator', () => {
       const key = 'a' + Binding.PROPERTY_SEPARATOR + 'b';
       expect(() => ctx.bind(key)).to.throw(/Binding key .* cannot contain/);
+    });
+
+    it('rejects rebinding of a locked key', () => {
+      ctx.bind('foo').lock();
+      expect(() => ctx.bind('foo')).to.throw(
+        'Cannot rebind key "foo" to a locked binding',
+      );
+    });
+  });
+
+  describe('add', () => {
+    it('accepts a binding', () => {
+      const binding = new Binding('foo').to('bar');
+      ctx.add(binding);
+      expect(ctx.getBinding(binding.key)).to.be.exactly(binding);
+      const result = ctx.contains('foo');
+      expect(result).to.be.true();
+    });
+
+    it('rejects rebinding of a locked key', () => {
+      ctx.bind('foo').lock();
+      expect(() => ctx.add(new Binding('foo'))).to.throw(
+        'Cannot rebind key "foo" to a locked binding',
+      );
     });
   });
 

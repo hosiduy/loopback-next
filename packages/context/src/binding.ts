@@ -368,7 +368,7 @@ export class Binding {
    *
    * @param provider The value provider to use.
    */
-  public toProvider<T>(providerClass: Constructor<Provider<T>>): this {
+  toProvider<T>(providerClass: Constructor<Provider<T>>): this {
     /* istanbul ignore if */
     if (debug.enabled) {
       debug('Bind %s to provider %s', this.key, providerClass.name);
@@ -424,5 +424,15 @@ export class Binding {
       json.type = this.type;
     }
     return json;
+  }
+
+  /**
+   * A static method to create a binding so that we can do
+   * `Binding.bind('foo').to('bar');` as `new Binding('foo').to('bar')` is not
+   * easy to read.
+   * @param key Binding key
+   */
+  static bind(key: string): Binding {
+    return new Binding(key);
   }
 }
