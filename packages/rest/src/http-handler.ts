@@ -15,6 +15,7 @@ import {
   ResolvedRoute,
   RouteEntry,
   ControllerClass,
+  ControllerFactory,
 } from './router/routing-table';
 import {ParsedRequest} from './internal-types';
 
@@ -33,8 +34,12 @@ export class HttpHandler {
     this.handleRequest = (req, res) => this._handleRequest(req, res);
   }
 
-  registerController(name: ControllerClass, spec: ControllerSpec) {
-    this._routes.registerController(name, spec);
+  registerController(
+    controllerCtor: ControllerClass,
+    spec: ControllerSpec,
+    factory?: ControllerFactory,
+  ) {
+    this._routes.registerController(controllerCtor, spec);
   }
 
   registerRoute(route: RouteEntry) {

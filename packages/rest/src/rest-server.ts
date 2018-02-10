@@ -6,7 +6,13 @@
 import {AssertionError} from 'assert';
 import {safeDump} from 'js-yaml';
 import {Binding, Context, Constructor, inject} from '@loopback/context';
-import {Route, ControllerRoute, RouteEntry} from './router/routing-table';
+import {
+  Route,
+  ControllerRoute,
+  RouteEntry,
+  createControllerFactory,
+  ControllerFactory,
+} from './router/routing-table';
 import {ParsedRequest} from './internal-types';
 import {OpenApiSpec, OperationObject} from '@loopback/openapi-v3-types';
 import {ServerRequest, ServerResponse, createServer} from 'http';
@@ -228,7 +234,8 @@ export class RestServer extends Context implements Server {
       if (apiSpec.components && apiSpec.components.schemas) {
         this._httpHandler.registerApiDefinitions(apiSpec.components.schemas);
       }
-      this._httpHandler.registerController(ctor, apiSpec);
+      const controllerFactory = createControllerFactory(b.key);
+      this._httpHandler.registerController(ctor, apiSpec, controllerFactory);
     }
 
     for (const b of this.find('routes.*')) {
@@ -277,7 +284,15 @@ export class RestServer extends Context implements Server {
         );
       }
 
-      const route = new ControllerRoute(verb, path, spec, ctor);
+      const controllerFactory = createControllerFactory(b.key);
+      const route = new ControllerRoute(
+        verb,
+        path,
+        spec,
+        ctor,
+        undefined,
+        controllerFactory,
+      );
       this._httpHandler.registerRoute(route);
       return;
     }
@@ -366,6 +381,7 @@ export class RestServer extends Context implements Server {
     spec: OperationObject,
     controller: ControllerClass,
     methodName: string,
+    factory?: ControllerFactory,
   ): Binding;
 
   /**
@@ -389,6 +405,7 @@ export class RestServer extends Context implements Server {
     spec?: OperationObject,
     controller?: ControllerClass,
     methodName?: string,
+    controllerFactory?: ControllerFactory,
   ): Binding {
     if (typeof routeOrVerb === 'object') {
       const r = routeOrVerb;
@@ -424,7 +441,14 @@ export class RestServer extends Context implements Server {
     }
 
     return this.route(
-      new ControllerRoute(routeOrVerb, path, spec, controller, methodName),
+      new ControllerRoute(
+        routeOrVerb,
+        path,
+        spec,
+        controller,
+        methodName,
+        controllerFactory,
+      ),
     );
   }
 
