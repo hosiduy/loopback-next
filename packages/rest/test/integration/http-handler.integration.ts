@@ -458,15 +458,15 @@ describe('HttpHandler', () => {
   }
 
   function givenClient() {
-    client = createClientForHandler((req, res) => {
-      handler.handleRequest(req, res).catch(err => {
+    client = createClientForHandler((request, response) => {
+      handler.handleRequest({request, response}).catch(err => {
         // This should never happen. If we ever get here,
         // then it means "handler.handlerRequest()" crashed unexpectedly.
         // We need to make a lot of helpful noise in such case.
         console.error('Request failed.', err.stack);
-        if (res.headersSent) return;
-        res.statusCode = 500;
-        res.end();
+        if (response.headersSent) return;
+        response.statusCode = 500;
+        response.end();
       });
     });
   }

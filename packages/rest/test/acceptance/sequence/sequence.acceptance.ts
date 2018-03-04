@@ -4,8 +4,6 @@
 // License text available at https://opensource.org/licenses/MIT
 
 import {
-  ServerResponse,
-  ParsedRequest,
   FindRoute,
   InvokeMethod,
   Send,
@@ -17,10 +15,11 @@ import {
   RestServer,
   RestComponent,
   RestApplication,
+  HttpContext,
 } from '../../..';
 import {api} from '@loopback/openapi-v3';
 import {Application} from '@loopback/core';
-import {expect, Client, createClientForHandler} from '@loopback/testlab';
+import {expect, createClientForHandler} from '@loopback/testlab';
 import {anOpenApiSpec} from '@loopback/openapi-spec-builder';
 import {inject, Context} from '@loopback/context';
 import {ControllerClass} from '../../../src/router/routing-table';
@@ -43,8 +42,8 @@ describe('Sequence', () => {
   });
 
   it('allows users to define a custom sequence as a function', () => {
-    server.handler((sequence, request, response) => {
-      sequence.send(response, 'hello world');
+    server.handler((sequence, httpCtx) => {
+      sequence.send(httpCtx.response, 'hello world');
     });
     return whenIRequest()
       .get('/')
@@ -55,8 +54,8 @@ describe('Sequence', () => {
     class MySequence implements SequenceHandler {
       constructor(@inject(SequenceActions.SEND) private send: Send) {}
 
-      async handle(req: ParsedRequest, res: ServerResponse) {
-        this.send(res, 'hello world');
+      async handle(httpCtx: HttpContext) {
+        this.send(httpCtx.response, 'hello world');
       }
     }
     // bind user defined sequence
@@ -77,11 +76,11 @@ describe('Sequence', () => {
         @inject(SequenceActions.SEND) protected send: Send,
       ) {}
 
-      async handle(req: ParsedRequest, res: ServerResponse) {
-        const route = this.findRoute(req);
-        const args = await this.parseParams(req, route);
+      async handle(httpCtx: HttpContext) {
+        const route = this.findRoute(httpCtx.request);
+        const args = await this.parseParams(httpCtx.request, route);
         const result = await this.invoke(route, args);
-        this.send(res, `MySequence ${result}`);
+        this.send(httpCtx.response, `MySequence ${result}`);
       }
     }
 
@@ -96,8 +95,8 @@ describe('Sequence', () => {
     class MySequence {
       constructor(@inject(SequenceActions.SEND) protected send: Send) {}
 
-      async handle(req: ParsedRequest, res: ServerResponse) {
-        this.send(res, 'MySequence was invoked.');
+      async handle(httpCtx: HttpContext) {
+        this.send(httpCtx.response, 'MySequence was invoked.');
       }
     }
 
@@ -136,9 +135,9 @@ describe('Sequence', () => {
 
   it('makes ctx available in a custom sequence handler function', () => {
     app.bind('test').to('hello world');
-    server.handler((sequence, request, response) => {
+    server.handler((sequence, httpCtx) => {
       expect.exists(sequence.ctx);
-      sequence.send(response, sequence.ctx.getSync('test'));
+      sequence.send(httpCtx.response, sequence.ctx.getSync('test'));
     });
 
     return whenIRequest()
@@ -160,8 +159,8 @@ describe('Sequence', () => {
         super(ctx, findRoute, parseParams, invoke, send, reject);
       }
 
-      async handle(req: ParsedRequest, res: ServerResponse) {
-        this.send(res, this.ctx.getSync('test'));
+      async handle(httpCtx: HttpContext) {
+        this.send(httpCtx.response, this.ctx.getSync('test'));
       }
     }
 
@@ -213,7 +212,7 @@ describe('Sequence', () => {
     app.controller(controller);
   }
 
-  function whenIRequest(restServer: RestServer = server): Client {
+  function whenIRequest(restServer: RestServer = server) {
     return createClientForHandler(restServer.handleHttp);
   }
 });

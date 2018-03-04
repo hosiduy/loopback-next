@@ -2,7 +2,7 @@ import {Context, inject} from '@loopback/context';
 import {
   FindRoute,
   InvokeMethod,
-  ParsedRequest,
+  Request,
   ParseParams,
   Reject,
   RestBindings,
@@ -23,7 +23,7 @@ export class MySequence implements SequenceHandler {
     @inject(SequenceActions.REJECT) public reject: Reject,
   ) {}
 
-  async handle(req: ParsedRequest, res: ServerResponse) {
+  async handle(req: Request, res: ServerResponse) {
     try {
       const route = this.findRoute(req);
       const args = await this.parseParams(req, route);

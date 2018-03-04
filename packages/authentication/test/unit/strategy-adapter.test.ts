@@ -5,7 +5,7 @@
 
 import {expect} from '@loopback/testlab';
 import {StrategyAdapter, UserProfile} from '../..';
-import {ParsedRequest, HttpErrors} from '@loopback/rest';
+import {Request, HttpErrors} from '@loopback/rest';
 import {MockStrategy} from './fixtures/mock-strategy';
 import {StrategyCreated, AuthenticateOptions} from 'passport';
 
@@ -29,7 +29,7 @@ describe('Strategy Adapter', () => {
       }
       const strategy = new Strategy();
       const adapter = new StrategyAdapter(strategy);
-      const request = <ParsedRequest>{};
+      const request = <Request>{};
       await adapter.authenticate(request);
       expect(calledFlag).to.be.true();
     });
@@ -38,7 +38,7 @@ describe('Strategy Adapter', () => {
       const strategy = new MockStrategy();
       strategy.setMockUser(mockUser);
       const adapter = new StrategyAdapter(strategy);
-      const request = <ParsedRequest>{};
+      const request = <Request>{};
       const user: Object = await adapter.authenticate(request);
       expect(user).to.be.eql(mockUser);
     });
@@ -47,7 +47,7 @@ describe('Strategy Adapter', () => {
       const strategy = new MockStrategy();
       strategy.setMockUser(mockUser);
       const adapter = new StrategyAdapter(strategy);
-      const request = <ParsedRequest>{};
+      const request = <Request>{};
       request.headers = {testState: 'fail'};
       let error;
       try {
@@ -62,7 +62,7 @@ describe('Strategy Adapter', () => {
       const strategy = new MockStrategy();
       strategy.setMockUser(mockUser);
       const adapter = new StrategyAdapter(strategy);
-      const request = <ParsedRequest>{};
+      const request = <Request>{};
       request.headers = {testState: 'error'};
       let error;
       try {

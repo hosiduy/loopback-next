@@ -7,7 +7,7 @@ import {Context, inject, Provider} from '@loopback/context';
 import {FindRoute} from '../internal-types';
 import {HttpHandler} from '../http-handler';
 import {RestBindings} from '../keys';
-import {ParsedRequest} from '../internal-types';
+import {Request} from '../internal-types';
 import {ResolvedRoute} from '../router/routing-table';
 
 export class FindRouteProvider implements Provider<FindRoute> {
@@ -20,7 +20,7 @@ export class FindRouteProvider implements Provider<FindRoute> {
     return request => this.action(request);
   }
 
-  action(request: ParsedRequest): ResolvedRoute {
+  action(request: Request): ResolvedRoute {
     const found = this.handler.findRoute(request);
     found.updateBindings(this.context);
     return found;

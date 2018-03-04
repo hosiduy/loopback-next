@@ -17,7 +17,6 @@ import {
   RestServer,
   RestBindings,
   RestComponentConfig,
-  ServerRequest,
   HttpHandler,
   LogError,
 } from '../..';
@@ -70,7 +69,7 @@ describe('RestComponent', () => {
 
         class CustomLogger implements Provider<BoundValue> {
           value() {
-            return (err: Error, statusCode: number, request: ServerRequest) => {
+            return (err: Error, statusCode: number, request: Request) => {
               lastLog = `${request.url} ${statusCode} ${err.message}`;
             };
           }

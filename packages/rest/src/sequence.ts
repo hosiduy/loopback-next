@@ -4,15 +4,14 @@
 // License text available at https://opensource.org/licenses/MIT
 
 const debug = require('debug')('loopback:core:sequence');
-import {ServerResponse} from 'http';
 import {inject, Context} from '@loopback/context';
 import {
   FindRoute,
   InvokeMethod,
-  ParsedRequest,
   Send,
   Reject,
   ParseParams,
+  HttpContext,
 } from './internal-types';
 import {RestBindings} from './keys';
 
@@ -24,8 +23,7 @@ const SequenceActions = RestBindings.SequenceActions;
  */
 export type SequenceFunction = (
   sequence: DefaultSequence,
-  request: ParsedRequest,
-  response: ServerResponse,
+  httpCtx: HttpContext,
 ) => Promise<void> | void;
 
 /**
@@ -39,7 +37,7 @@ export interface SequenceHandler {
    * @param request The incoming HTTP request
    * @param response The HTTP server response where to write the result
    */
-  handle(request: ParsedRequest, response: ServerResponse): Promise<void>;
+  handle(httpCtx: HttpContext): Promise<void>;
 }
 
 /**
@@ -101,16 +99,16 @@ export class DefaultSequence implements SequenceHandler {
    * @param res HTTP server response with result from Application controller
    *  method invocation
    */
-  async handle(req: ParsedRequest, res: ServerResponse) {
+  async handle({request, response}: HttpContext) {
     try {
-      const route = this.findRoute(req);
-      const args = await this.parseParams(req, route);
+      const route = this.findRoute(request);
+      const args = await this.parseParams(request, route);
       const result = await this.invoke(route, args);
 
       debug('%s result -', route.describe(), result);
-      this.send(res, result);
+      this.send(response, result);
     } catch (err) {
-      this.reject(res, req, err);
+      this.reject(response, request, err);
     }
   }
 }

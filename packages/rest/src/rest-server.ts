@@ -7,11 +7,11 @@ import {AssertionError} from 'assert';
 import {safeDump} from 'js-yaml';
 import {Binding, Context, Constructor, inject} from '@loopback/context';
 import {Route, ControllerRoute, RouteEntry} from './router/routing-table';
-import {ParsedRequest} from './internal-types';
 import {OpenApiSpec, OperationObject} from '@loopback/openapi-v3-types';
-import {ServerRequest, ServerResponse, createServer} from 'http';
-import * as Http from 'http';
 import * as cors from 'cors';
+import {Request, Response, HttpContext} from './internal-types';
+import {Server as HttpServer} from 'http';
+import {Server as HttpsServer, ServerOptions} from 'https';
 import {Application, CoreBindings, Server} from '@loopback/core';
 import {getControllerSpec} from '@loopback/openapi-v3';
 import {HttpHandler} from './http-handler';
@@ -25,6 +25,7 @@ import {
 } from './internal-types';
 import {ControllerClass} from './router/routing-table';
 import {RestBindings} from './keys';
+import {createServer, HandleHttp, ExpressApplication} from './http-server';
 
 const SequenceActions = RestBindings.SequenceActions;
 
@@ -88,24 +89,24 @@ export class RestServer extends Context implements Server {
    * @example
    *
    * ```ts
-   * const app = new Application();
+   * const server = new RestServer(app, config);
    * // setup controllers, etc.
    *
-   * const server = http.createServer(app.handleHttp);
+   * const server = http.createServer(server.handleHttp);
    * server.listen(3000);
    * ```
    *
-   * @param req The request.
-   * @param res The response.
+   * @param httpCtx HTTP context
    */
-  public handleHttp: (req: ServerRequest, res: ServerResponse) => void;
-
+  public handleHttp: HandleHttp;
+  public readonly options: RestServerConfig;
+  public transport: ExpressApplication;
   protected _httpHandler: HttpHandler;
   protected get httpHandler(): HttpHandler {
     this._setupHandlerIfNeeded();
     return this._httpHandler;
   }
-  protected _httpServer: Http.Server;
+  protected _httpServer: HttpServer | HttpsServer;
 
   /**
    * @memberof RestServer
@@ -124,6 +125,7 @@ export class RestServer extends Context implements Server {
     super(app);
 
     options = options || {};
+    this.options = options;
 
     // Can't check falsiness, 0 is a valid port.
     if (options.port == null) {
@@ -140,13 +142,11 @@ export class RestServer extends Context implements Server {
       this.sequence(options.sequence);
     }
 
-    this.handleHttp = (req: ServerRequest, res: ServerResponse) => {
+    this.handleHttp = async (httpCtx: HttpContext) => {
       try {
-        this._handleHttpRequest(req, res, options!).catch(err =>
-          this._onUnhandledError(req, res, err),
-        );
+        await this._handleHttpRequest(httpCtx, options!);
       } catch (err) {
-        this._onUnhandledError(req, res, err);
+        this._onUnhandledError(httpCtx, err);
       }
     };
 
@@ -154,10 +154,11 @@ export class RestServer extends Context implements Server {
   }
 
   protected _handleHttpRequest(
-    request: ServerRequest,
-    response: ServerResponse,
+    httpCtx: HttpContext,
     options: RestServerConfig,
   ) {
+    const request = httpCtx.request;
+    const response = httpCtx.response;
     // allow CORS support for all endpoints so that users
     // can test with online SwaggerUI instance
 
@@ -199,9 +200,9 @@ export class RestServer extends Context implements Server {
       request.url &&
       request.url === '/swagger-ui'
     ) {
-      return this._redirectToSwaggerUI(request, response, options);
+      return this._redirectToSwaggerUI(httpCtx, options);
     }
-    return this.httpHandler.handleRequest(request, response);
+    return this.httpHandler.handleRequest(httpCtx);
   }
 
   protected _setupHandlerIfNeeded() {
@@ -288,8 +289,8 @@ export class RestServer extends Context implements Server {
   }
 
   private async _serveOpenApiSpec(
-    request: ServerRequest,
-    response: ServerResponse,
+    request: Request,
+    response: Response,
     options?: OpenApiSpecOptions,
   ) {
     options = options || {version: '3.0.0', format: 'json'};
@@ -306,8 +307,7 @@ export class RestServer extends Context implements Server {
   }
 
   private async _redirectToSwaggerUI(
-    request: ServerRequest,
-    response: ServerResponse,
+    {request, response}: HttpContext,
     options: RestServerConfig,
   ) {
     response.statusCode = 308;
@@ -477,7 +477,7 @@ export class RestServer extends Context implements Server {
    *     @inject('send) public send: Send)) {
    *   }
    *
-   *   public async handle(request: ParsedRequest, response: ServerResponse) {
+   *   public async handle(request: Request, response: Response) {
    *     send(response, 'hello world');
    *   }
    * }
@@ -516,11 +516,8 @@ export class RestServer extends Context implements Server {
         super(ctx, findRoute, parseParams, invoke, send, reject);
       }
 
-      async handle(
-        request: ParsedRequest,
-        response: ServerResponse,
-      ): Promise<void> {
-        await Promise.resolve(handlerFn(this, request, response));
+      async handle(httpCtx: HttpContext): Promise<void> {
+        await Promise.resolve(handlerFn(this, httpCtx));
       }
     }
 
@@ -540,20 +537,14 @@ export class RestServer extends Context implements Server {
 
     const httpPort = await this.get<number>(RestBindings.PORT);
     const httpHost = await this.get<string | undefined>(RestBindings.HOST);
-    this._httpServer = createServer(this.handleHttp);
-    const httpServer = this._httpServer;
 
-    // TODO(bajtos) support httpHostname too
-    // See https://github.com/strongloop/loopback-next/issues/434
-    httpServer.listen(httpPort, httpHost);
-
-    return new Promise<void>((resolve, reject) => {
-      httpServer.once('listening', () => {
-        this.bind(RestBindings.PORT).to(httpServer.address().port);
-        resolve();
-      });
-      httpServer.once('error', reject);
-    });
+    if (httpHost != null) {
+      this.options.host = httpHost;
+    }
+    if (httpPort != null) {
+      this.options.port = httpPort;
+    }
+    this._httpServer = await createServer(this);
   }
 
   /**
@@ -576,14 +567,10 @@ export class RestServer extends Context implements Server {
     });
   }
 
-  protected _onUnhandledError(
-    req: ServerRequest,
-    res: ServerResponse,
-    err: Error,
-  ) {
-    if (!res.headersSent) {
-      res.statusCode = 500;
-      res.end();
+  protected _onUnhandledError({response}: HttpContext, err: Error) {
+    if (!response.headersSent) {
+      response.statusCode = 500;
+      response.end();
     }
 
     // It's the responsibility of the Sequence to handle any errors.
@@ -602,6 +589,8 @@ export class RestServer extends Context implements Server {
  * @interface RestServerConfig
  */
 export interface RestServerConfig {
+  protocol?: 'http' | 'https';
+  httpsServerOptions?: ServerOptions;
   host?: string;
   port?: number;
   cors?: cors.CorsOptions;

@@ -4,14 +4,14 @@
 // License text available at https://opensource.org/licenses/MIT
 
 import {
-  ServerRequest,
-  ServerResponse,
   Route,
   RestBindings,
   RestServer,
   RestComponent,
   RestApplication,
   SequenceActions,
+  Request,
+  Response,
 } from '../../..';
 
 import {api, get, post, param, requestBody} from '@loopback/openapi-v3';
@@ -24,7 +24,7 @@ import {
   ResponseObject,
 } from '@loopback/openapi-v3-types';
 
-import {expect, Client, createClientForHandler} from '@loopback/testlab';
+import {expect, createClientForHandler} from '@loopback/testlab';
 import {anOpenApiSpec, anOperationSpec} from '@loopback/openapi-spec-builder';
 import {inject, Context} from '@loopback/context';
 import {ControllerClass} from '../../../src/router/routing-table';
@@ -307,12 +307,12 @@ describe('Routing', () => {
     @api(spec)
     class StatusController {
       constructor(
-        @inject(RestBindings.Http.REQUEST) private request: ServerRequest,
-        @inject(RestBindings.Http.RESPONSE) private response: ServerResponse,
+        @inject(RestBindings.Http.REQUEST) private request: Request,
+        @inject(RestBindings.Http.RESPONSE) private response: Response,
       ) {}
 
       async getStatus(): Promise<string> {
-        this.response.statusCode = 202; // 202 Accepted
+        this.response.status(202); // 202 Accepted
         return this.request.method as string;
       }
     }
@@ -631,7 +631,7 @@ describe('Routing', () => {
     app.controller(controller);
   }
 
-  function whenIMakeRequestTo(server: RestServer): Client {
+  function whenIMakeRequestTo(server: RestServer) {
     return createClientForHandler(server.handleHttp);
   }
 });

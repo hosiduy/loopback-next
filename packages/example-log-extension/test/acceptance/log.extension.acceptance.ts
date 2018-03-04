@@ -13,8 +13,7 @@ import {
   InvokeMethod,
   Send,
   Reject,
-  ParsedRequest,
-  ServerResponse,
+  HttpContext,
 } from '@loopback/rest';
 import {get, param} from '@loopback/openapi-v3';
 import {
@@ -215,7 +214,7 @@ describe('log extension acceptance test', () => {
         @inject(EXAMPLE_LOG_BINDINGS.LOG_ACTION) protected logger: LogFn,
       ) {}
 
-      async handle(req: ParsedRequest, res: ServerResponse) {
+      async handle({request: req, response: res}: HttpContext) {
         // tslint:disable-next-line:no-any
         let args: any = [];
         // tslint:disable-next-line:no-any
