@@ -26,6 +26,15 @@ import {
 import {ControllerClass} from './router/routing-table';
 import {RestBindings} from './keys';
 
+export type HttpRequestListener = (
+  req: ServerRequest,
+  res: ServerResponse,
+) => void;
+
+export interface HttpServerLike {
+  handleHttp: HttpRequestListener;
+}
+
 const SequenceActions = RestBindings.SequenceActions;
 
 // NOTE(bajtos) we cannot use `import * as cloneDeep from 'lodash/cloneDeep'
@@ -82,7 +91,7 @@ const OPENAPI_SPEC_MAPPING: {[key: string]: OpenApiSpecOptions} = {
  * @extends {Context}
  * @implements {Server}
  */
-export class RestServer extends Context implements Server {
+export class RestServer extends Context implements Server, HttpServerLike {
   /**
    * Handle incoming HTTP(S) request by invoking the corresponding
    * Controller method via the configured Sequence.
@@ -91,16 +100,18 @@ export class RestServer extends Context implements Server {
    *
    * ```ts
    * const app = new Application();
+   * app.component(RestComponent);
    * // setup controllers, etc.
    *
-   * const server = http.createServer(app.handleHttp);
-   * server.listen(3000);
+   * const restServer = await app.getServer(RestServer);
+   * const httpServer = http.createServer(restServer.handleHttp);
+   * httpServer.listen(3000);
    * ```
    *
    * @param req The request.
    * @param res The response.
    */
-  public handleHttp: (req: ServerRequest, res: ServerResponse) => void;
+  public handleHttp: HttpRequestListener;
 
   protected _httpHandler: HttpHandler;
   protected get httpHandler(): HttpHandler {
