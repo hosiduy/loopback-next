@@ -30,7 +30,7 @@ export {HttpEndpoint, HttpServerConfig} from '@loopback/http-server';
 export type HttpContext = BaseHttpContext<Request, Response>;
 export type HandleHttp = BaseHandleHttp<Request, Response>;
 
-export class ExpressHttpEndpointFactory
+class ExpressHttpEndpointFactory
   implements HttpEndpointFactory<Request, Response> {
   create(config: HttpServerConfig, handleHttp: HandleHttp) {
     // Create an express representing the server endpoint
@@ -74,4 +74,7 @@ export class ExpressHttpEndpointFactory
   }
 }
 
-export const ENDPOINT_FACTORY = new ExpressHttpEndpointFactory();
+export const ENDPOINT_FACTORY: HttpEndpointFactory<
+  Request,
+  Response
+> = new ExpressHttpEndpointFactory();

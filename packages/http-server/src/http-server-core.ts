@@ -18,12 +18,12 @@ const debug = debugModule('loopback:http:server:core');
 /**
  * Export specific types from this implementation
  */
-export interface Request extends http.IncomingMessage {}
-export interface Response extends http.ServerResponse {}
+export type Request = http.IncomingMessage;
+export type Response = http.ServerResponse;
 export type HttpContext = BaseHttpContext<Request, Response>;
 export type HandleHttp = BaseHandleHttp<Request, Response>;
 
-export class CoreHttpEndpointFactory
+class CoreHttpEndpointFactory
   implements HttpEndpointFactory<Request, Response> {
   create(config: HttpServerConfig, handleHttp: HandleHttp) {
     let server: http.Server | https.Server;
@@ -59,4 +59,10 @@ export class CoreHttpEndpointFactory
   }
 }
 
-export const ENDPOINT_FACTORY = new CoreHttpEndpointFactory();
+/**
+ * A singleton instance of the core http endpoint factory
+ */
+export const ENDPOINT_FACTORY: HttpEndpointFactory<
+  Request,
+  Response
+> = new CoreHttpEndpointFactory();

@@ -25,8 +25,7 @@ export {HttpEndpoint, HttpServerConfig} from '@loopback/http-server';
 export type HttpContext = BaseHttpContext<Request, Response>;
 export type HandleHttp = BaseHandleHttp<Request, Response>;
 
-export class koaHttpEndpointFactory
-  implements HttpEndpointFactory<Request, Response> {
+class koaHttpEndpointFactory implements HttpEndpointFactory<Request, Response> {
   create(config: HttpServerConfig, handleHttp: HandleHttp) {
     // Create an koa representing the server endpoint
     const app = new Koa();
@@ -71,4 +70,7 @@ export class koaHttpEndpointFactory
   }
 }
 
-export const ENDPOINT_FACTORY = new koaHttpEndpointFactory();
+export const ENDPOINT_FACTORY: HttpEndpointFactory<
+  Request,
+  Response
+> = new koaHttpEndpointFactory();
