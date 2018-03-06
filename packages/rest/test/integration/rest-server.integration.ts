@@ -46,9 +46,9 @@ describe('RestServer (integration)', () => {
 
   it('allows cors', async () => {
     const server = await givenAServer({rest: {port: 0}});
-    server.handler((sequence, request, response) => {
-      response.write('Hello');
-      response.end();
+    server.handler((sequence, httpCtx) => {
+      httpCtx.response.write('Hello');
+      httpCtx.response.end();
     });
 
     await createClientForHandler(server.handleHttp)
@@ -60,9 +60,9 @@ describe('RestServer (integration)', () => {
 
   it('allows cors preflight', async () => {
     const server = await givenAServer({rest: {port: 0}});
-    server.handler((sequence, request, response) => {
-      response.write('Hello');
-      response.end();
+    server.handler((sequence, httpCtx) => {
+      httpCtx.response.write('Hello');
+      httpCtx.response.end();
     });
 
     await createClientForHandler(server.handleHttp)
