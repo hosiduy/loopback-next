@@ -7,7 +7,7 @@ import {Binding, BoundValue} from '@loopback/context';
 import {ResolvedRoute, RouteEntry} from './router/routing-table';
 
 import {Request, Response} from './http-server';
-export {Request, Response, NextFunction, HttpContext} from './http-server';
+export {Request, Response, HttpContext} from './http-server';
 
 /**
  * Find a route matching the incoming request.

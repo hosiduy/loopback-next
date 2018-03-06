@@ -9,7 +9,6 @@ import {Binding, Context, Constructor, inject} from '@loopback/context';
 import {Route, ControllerRoute, RouteEntry} from './router/routing-table';
 import {OpenApiSpec, OperationObject} from '@loopback/openapi-v3-types';
 import * as cors from 'cors';
-import {Request, Response, HttpContext} from './internal-types';
 import {Server as HttpServer} from 'http';
 import {Server as HttpsServer, ServerOptions} from 'https';
 import {Application, CoreBindings, Server} from '@loopback/core';
@@ -25,7 +24,14 @@ import {
 } from './internal-types';
 import {ControllerClass} from './router/routing-table';
 import {RestBindings} from './keys';
-import {createServer, HandleHttp, ExpressApplication} from './http-server';
+import {
+  ENDPOINT_FACTORY,
+  Request,
+  Response,
+  HttpContext,
+  HandleHttp,
+  ExpressApplication,
+} from './http-server';
 
 const SequenceActions = RestBindings.SequenceActions;
 
@@ -544,7 +550,12 @@ export class RestServer extends Context implements Server {
     if (httpPort != null) {
       this.options.port = httpPort;
     }
-    this._httpServer = await createServer(this);
+    const endpoint = await ENDPOINT_FACTORY.create(this.options, httpCtx =>
+      this.handleHttp(httpCtx),
+    );
+    this.bind(RestBindings.PORT).to(this.options.port);
+    this.transport = endpoint.container;
+    this._httpServer = endpoint.server;
   }
 
   /**
