@@ -25,7 +25,7 @@ At the moment, we only have implementations of `Repository` based on LoopBack
 3.x `loopback-datasource-juggler` and connectors. The following steps illustrate
 how to define repositories and use them with controllers.
 
-### Define legacy data sources and models
+### Defining a legacy datasource and a model
 
 The repository module provides APIs to define LoopBack 3.x data sources and
 models. For example,
@@ -57,7 +57,7 @@ export class Note extends Entity {
 LoopBack 4. These constructs need to be created programmatically as
 illustrated above.
 
-### Define a repository
+### Defining a repository
 
 A repository can be created by extending `DefaultCrudRepository` and using
 dependency injection to resolve the datasource.
@@ -78,7 +78,7 @@ export class NoteRepository extends DefaultCrudRepository<
 }
 ```
 
-### Define a controller
+### Defining a controller
 
 Controllers serve as handlers for API requests. We declare controllers as
 classes with optional dependency injection by decorating constructor parameters
@@ -113,7 +113,7 @@ export class NoteController {
 
 ### Run the controller and repository together
 
-#### Use the Repository Mixin for Application
+#### Using the Repository Mixin for Application
 
 A Repository Mixin is available for Application that provides convenience
 methods for binding and instantiating a repository class. Bound instances can be
