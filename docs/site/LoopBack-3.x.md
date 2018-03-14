@@ -8,7 +8,11 @@ permalink: /doc/en/lb4/LoopBack-3.x.html
 summary:
 ---
 
-LoopBack 4 is the next generation of the LoopBack framework, with a completely rewritten core foundation and significantly improved programming model. If you're an existing LoopBack user, read [Crafting LoopBack 4](Crafting-LoopBack-4.md) to understand the motivations, strategy, and innovations behind this exciting new version.
+LoopBack 4 is the next generation of the LoopBack framework, with a completely
+rewritten core foundation and significantly improved programming model.
+If you're an existing LoopBack user, read [Crafting LoopBack 4](Crafting-LoopBack-4.html)
+to understand the motivations, strategy, and innovations behind this exciting
+new version.
 
 This article will help existing users understand LoopBack 4:
 
@@ -42,15 +46,31 @@ At the public API side, users can define:
   3. before/after/afterError hooks at model-level
   4. before/after/afterError hooks at model method level
 
-LoopBack Next was intentionally designed to allow users to choose their ORM/persistence solution, and our initial version of @loopback/repository is based on juggler 3.x. That makes it possible for users to reuse their existing model definitions, migrating their application incrementally.
+LoopBack Next was intentionally designed to allow users to choose their
+ORM/persistence solution, and our initial version of @loopback/repository
+is based on juggler 3.x. That makes it possible for users to reuse their
+existing model definitions, migrating their application incrementally.
 
 ## Concept/feature mapping
 
-In Loopback 3.x (and earlier), models were responsible for both accessing data in other systems (databases, SOAP services, etc.) and providing the application's external REST API. This made it easy to quickly build a REST interface for an existing database, but difficult to customize the REST API and fine-tune it to the needs of application clients.
+In Loopback 3.x (and earlier), models were responsible for both accessing data
+in other systems (databases, SOAP services, etc.) and providing the
+application's external REST API. This made it easy to quickly build a REST
+interface for an existing database, but difficult to customize the REST API
+and fine-tune it to the needs of application clients.
 
-LoopBack v4 is moving to the well-known Model-(View-)Controller pattern, where the code responsible for data access and manipulation is separated from the code responsible for implementing the REST API.
+LoopBack v4 is moving to the well-known Model-(View-)Controller pattern,
+where the code responsible for data access and manipulation is separated
+from the code responsible for implementing the REST API.
 
-[loopback-next-example](https://github.com/strongloop/loopback-next-example) demonstrates this loose coupling. Facade is the top-level service that serves the account summary API, and is dependent on the three services Account, Customer, and Transaction. But the facade only aggregates the calls to the three services, and is not tightly coupled with the service implementation; that's why it is independent of the three services. We can define the APIs in facade the way we want. Thus, code responsible for data access and manipulation is separated from the code responsible for implementing client side APIs.
+[loopback-next-example](https://github.com/strongloop/loopback-next-example)
+demonstrates this loose coupling. Facade is the top-level service that serves
+the account summary API, and is dependent on the three services Account,
+Customer, and Transaction. But the facade only aggregates the calls to the
+three services, and is not tightly coupled with the service implementation;
+that's why it is independent of the three services. We can define the APIs in
+facade the way we want. Thus, code responsible for data access and manipulation
+is separated from the code responsible for implementing client side APIs.
 
 
 | Concept/Feature       | LoopBack 3.x                                   | LoopBack 4                                        |
@@ -82,35 +102,50 @@ LoopBack v4 is moving to the well-known Model-(View-)Controller pattern, where t
 Some of the highlights of LoopBack 4 include:
 
 - Leverage TypeScript for better code quality and productivity
-- Unify and simplify the asynchronous programming model/style around Promise and Async/Await
-- Implement an IoC Container with Dependency Injection for better visibility, extensibility and composability
-- Introduce Component as packaging model for extensions that can be plugged into LoopBack 4 applications
-- Make everything else as components, such as REST, Authentication, and Authorization
+- Unify and simplify the asynchronous programming model/style around Promise
+and Async/Await
+- Implement an IoC Container with Dependency Injection for better visibility,
+extensibility and composability
+- Introduce Component as packaging model for extensions that can be plugged into
+LoopBack 4 applications
+- Make everything else as components, such as REST, Authentication, and
+Authorization
 - Divide the responsibilities of LoopBack models into
   - Controllers - to handle incoming API requests
   - Repositories - to provide access to data stores
   - Models - to define schemas for business objects
-  - Services - to interact with existing REST APIs, SOAP WebServices, and other form of services/microservices
+  - Services - to interact with existing REST APIs, SOAP WebServices, and other
+form of services/microservices
 - Refactor the ORM into separate modules for different concerns
 
 ## What's in the beta release
 
-The beta release is the first milestone of the LoopBack 4 journey. Although it's not functionally complete or ready for production use, it provides a preview of what's coming, including:
+The beta release is the first milestone of the LoopBack 4 journey. Although
+it's not functionally complete or ready for production use, it provides a
+preview of what's coming, including:
 
-1. A new `@loopback/context` module that implements an IoC container with dependency injection
-2. A new `@loopback/core` module that defines core artifacts such as application and component
-3. A `@loopback/rest` component that provides top-down REST API mapping using OpenAPI/Swagger specs and controllers
-4. A `@loopback/authentication` component to provide infrastructure to integrate with authentication providers
-5. An experimental `@loopback/repository` module to define repository interfaces and provide a reference implementation on top of legacy `loopback-datasource-juggler` and connectors
+1. A new `@loopback/context` module that implements an IoC container with
+dependency injection
+2. A new `@loopback/core` module that defines core artifacts such as application
+and component
+3. A `@loopback/rest` component that provides top-down REST API mapping using
+OpenAPI/Swagger specs and controllers
+4. A `@loopback/authentication` component to provide infrastructure to integrate
+with authentication providers
+5. An experimental `@loopback/repository` module to define repository interfaces
+and provide a reference implementation on top of legacy
+`loopback-datasource-juggler` and connectors
 6. Examples and tutorials
 
-The primary target audience of the beta release is extension developers. Please check out https://github.com/strongloop/loopback4-example-log-extension.
+The primary target audience of the beta release is extension developers.
+Please check out https://github.com/strongloop/loopback4-example-log-extension.
 
-The initial beta release provides a preview for API developers. Currently, the LoopBack CLI doesn't yet support LoopBack 4, but it will eventually. See a working application at https://github.com/strongloop/loopback-next-hello-world.
+The initial beta release provides a preview for API developers. Currently,
+the LoopBack CLI doesn't yet support LoopBack 4, but it will eventually.
+See a working application at https://github.com/strongloop/loopback-next-hello-world.
 
 ## Tentative roadmap
 
 > Disclaimer: The release plan is tentative and it's subject to changes as the core team and community contributors make progress incrementally.
 
 - https://github.com/strongloop/loopback-next/wiki/Upcoming-Releases
-
