@@ -220,7 +220,14 @@ export class DefaultCrudRepository<T extends Entity, ID>
   }
 
   protected toEntity(model: DataObject<T>): T {
-    return new this.entityClass(model.toObject()) as T;
+    if(!model) return null;
+    let result;
+    if (typeof model.toObject === 'function') {
+      result = new this.entityClass(model.toObject()) as T;
+    } else {
+      result = new this.entityClass(model) as T;
+    }
+    return result;
   }
 
   protected toEntities(models: DataObject<T>[]): T[] {
